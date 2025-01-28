@@ -37,7 +37,7 @@ Adafruit_PM25AQI aqi;
 // Test counter: Variable
 int counter = 0;
 
-// Function Prototypes
+// AQI Calculation Function Prototypes
 int calculateAQI(float concentration, const int breakpoints[][2], const int AQI_ranges[][2], int size);
 std::pair<int, String> calculateDominantAQI(float pm25, float pm10);
 
@@ -69,8 +69,6 @@ void setup() {
   delay(500);
   digitalWrite(LED_BUILTIN, LOW);
   delay(500);
-
-  delay(1000); // 1 second delay
 
 
   // Manually set the RTC to the compile time (Comment out when in Demo)
@@ -112,8 +110,6 @@ void setup() {
     delay(500);
   }
 
-  delay(1000); // 1 second delay
-
   // Initialize PMSA003I
   if (!aqi.begin_I2C()) { // Use I2C instead or UART2
   //Serial.println("PMSA003I not detected. Please check wiring.");
@@ -134,8 +130,6 @@ void setup() {
     delay(500);
   }
 
-  delay(1000); // 1 second delay
-
   // Initialize LoRa
   if (!LoRa.begin(923200000)) { //Set frequency for Philippines
     //Serial.println("Failed to initialize LoRa Module");
@@ -153,9 +147,6 @@ void setup() {
     delay(500);
     digitalWrite(LED_BUILTIN, LOW);
     delay(500);
-  }
-
-  delay(1000); // 1 second delay
 
   //Serial.println("LoRa initialized! " + String(NODE_ID) + " Ready");
 }
@@ -224,12 +215,6 @@ void loop() {
   LoRa.beginPacket(); // Starts a new packet
   LoRa.print(dataPacket);
   LoRa.endPacket();
-
-  // Blink LED to indicate a data packet was sent
-  digitalWrite(LED_BUILTIN, HIGH);
-  delay(100);
-  digitalWrite(LED_BUILTIN, LOW);
-  delay(100);
 
   //Serial.println(String(NODE_ID) + " sent: " + dataPacket); // Print send data for debugging
 
