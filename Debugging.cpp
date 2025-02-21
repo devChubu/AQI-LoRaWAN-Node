@@ -25,21 +25,45 @@
 #include <Adafruit_SHT4x.h> // SHT45 RHT Sensor
 #include <Adafruit_PM25AQI.h> // PMSA003I AQI Sensor
 #include <utility> // Include this header for std::pair and std::make_pair
+#include <FlashStorage.h> // Include Flash Memory
 
 #define NODE_ID "Node 1" // Create variable for Node ID
 
+//Defined a structure to store the RTC set flag
+struct RTCFlag {
+  bool isSet;
+};
 
 // I2C Object Creation
 RV8803 rtc; // Create an RTC object
 Adafruit_SHT4x sht4 = Adafruit_SHT4x(); // Create a SHT45 object
 Adafruit_PM25AQI aqi;
+FlashStorage(rtcFlagStorage, RTCFlag); // Create a FlashStorage object
+
+// MAX16163 I2C Slave Address
+#define MAX16163_I2C_ADDR 0x23
+
+// MAX16163 Sleep Time Register Address
+#define MAX16163_SLEEP_TIME_REG 0x00
+
+// MAX16163 Sleep Time Register Values
+#define MAX16163_SLEEP_10S 0x0A // Sleep Time: 10 seconds
+#define MAX16163_SLEEP_20S 0x0B // Sleep Time: 20 seconds
+#define MAX16163_SLEEP_40S 0x0C // Sleep Time: 40 seconds
+#define MAX16163_SLEEP_1M 0x0D // Sleep Time: 1 minute
+#define MAX16163_SLEEP_2M 0x0E // Sleep Time: 2 minutes
+#define MAX16163_SLEEP_10M 0x12 // Sleep Time: 10 minutes
+
 
 // Test counter: Variable
 int counter = 0;
 
-// AQI Calculation Function Prototypes
+// Function Prototypes
 int calculateAQI(float concentration, const int breakpoints[][2], const int AQI_ranges[][2], int size);
 std::pair<int, String> calculateDominantAQI(float pm25, float pm10);
+void setRTCToCompileTime();
+//void setMAX16163SleepTime(uint8_t sleepTime);
+void sleepMAX16163();
 
 void setup() {
   // Add a delay to ensure stable power-up
@@ -70,24 +94,8 @@ void setup() {
   digitalWrite(LED_BUILTIN, LOW);
   delay(500);
 
+  delay(1000); // 1 second delay
 
-  // Manually set the RTC to the compile time (Comment out when in Demo)
-  setRTCToCompileTime();
-
-  /*
-  // Debugging prints
-  Serial.print("Compile Time: ");
-  Serial.print(__TIME__);
-  Serial.print(" Date: ");
-  Serial.println(__DATE__);
-
-  // Print the current time and date
-  rtc.updateTime();
-  Serial.println("RTC initialized! Current date and time:");
-  Serial.print(rtc.stringDateUSA());  // Print date in MM/DD/YYYY format
-  Serial.print(" ");
-  Serial.println(rtc.stringTime());   // Print time in HH:MM:SS format
-  */
 
   // Initialize SHT45
   if (!sht4.begin()) {
@@ -110,6 +118,8 @@ void setup() {
     delay(500);
   }
 
+  delay(1000); // 1 second delay
+
   // Initialize PMSA003I
   if (!aqi.begin_I2C()) { // Use I2C instead or UART2
   //Serial.println("PMSA003I not detected. Please check wiring.");
@@ -130,6 +140,8 @@ void setup() {
     delay(500);
   }
 
+  delay(1000); // 1 second delay
+
   // Initialize LoRa
   if (!LoRa.begin(923200000)) { //Set frequency for Philippines
     //Serial.println("Failed to initialize LoRa Module");
@@ -147,8 +159,37 @@ void setup() {
     delay(500);
     digitalWrite(LED_BUILTIN, LOW);
     delay(500);
+  }
+
+  delay(1000); // 1 second delay
 
   //Serial.println("LoRa initialized! " + String(NODE_ID) + " Ready");
+
+// Checked the flag in flash storage and set the RTC time only if the flag is not set
+RTCFlag rtcFlag = rtcFlagStorage.read();
+if (!rtcFlag.isSet) {
+  setRTCToCompileTime();
+  rtcFlag.isSet = true;
+  rtcFlagStorage.write(rtcFlag);
+}
+
+  // Manually set the RTC to the compile time (only when uploading the sketch)
+  //setRTCToCompileTime();
+  
+  /*
+  // Debugging prints
+  Serial.print("Compile Time: ");
+  Serial.print(__TIME__);
+  Serial.print(" Date: ");
+  Serial.println(__DATE__);
+
+  // Print the current time and date
+  rtc.updateTime();
+  Serial.println("RTC initialized! Current date and time:");
+  Serial.print(rtc.stringDateUSA());  // Print date in MM/DD/YYYY format
+  Serial.print(" ");
+  Serial.println(rtc.stringTime());   // Print time in HH:MM:SS format
+  */
 }
 
 void loop() {
@@ -216,9 +257,18 @@ void loop() {
   LoRa.print(dataPacket);
   LoRa.endPacket();
 
+  // Blink LED to indicate a data packet was sent
+  digitalWrite(LED_BUILTIN, HIGH);
+  delay(100);
+  digitalWrite(LED_BUILTIN, LOW);
+  delay(100);
+
   //Serial.println(String(NODE_ID) + " sent: " + dataPacket); // Print send data for debugging
 
   counter++; // Counter Increment
+
+  //setMAX16163SleepTime(MAX16163_SLEEP_10S);
+  sleepMAX16163();
 
   delay(60000);
 }
@@ -320,4 +370,11 @@ std::pair<int, String> calculateDominantAQI(float pm25, float pm10) {
 
   // Return result as a pair
   return std::make_pair(dominantAQI, dominantPollutant);
+}
+
+void sleepMAX16163() {
+  Wire.beginTransmission(MAX16163_I2C_ADDR);  // Send start condition to slave address
+  Wire.write(MAX16163_SLEEP_TIME_REG); // Write to the register address 0x00
+  Wire.write(0x4A); // Write the 7-bit value 01001010 (0x4A in hexadecimal)
+  Wire.endTransmission();
 }
