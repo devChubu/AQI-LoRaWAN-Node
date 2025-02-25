@@ -52,26 +52,42 @@ void loop() {
     // Parse JSON-like string manually
     if (receivedData.startsWith("{") && receivedData.endsWith("}")) {
       String nodeId = extractValue(receivedData, "node");
-      String timestamp = extractValue(receivedData, "time");
-      String temperature = extractValue(receivedData, "temp");
-      String humidity = extractValue(receivedData, "hum");
-      String pm25 = extractValue(receivedData, "pm25");
-      String pm10 = extractValue(receivedData, "pm10");
-      String aqi = extractValue(receivedData, "aqi");
-      String pollutant = extractValue(receivedData, "pollutant");
-      String counter = extractValue(receivedData, "count");
 
-      // Print parsed values
-      Serial.println("Parsed Data:");
-      Serial.println("  Node ID: " + nodeId);
-      Serial.println("  Timestamp: " + timestamp);
-      Serial.println("  Temperature: " + temperature + " °C");
-      Serial.println("  Humidity: " + humidity + " %");
-      Serial.println("  PM2.5: " + pm25 + " µg/m³");
-      Serial.println("  PM10: " + pm10 + " µg/m³");
-      Serial.println("  AQI: " + aqi);
-      Serial.println("  Pollutant: " + pollutant);
-      Serial.println("  Counter: " + counter);
+      if (nodeId == "Node 1" || nodeId == "Node 2") {
+        String timestamp = extractValue(receivedData, "time");
+        String temperature = extractValue(receivedData, "temp");
+        String humidity = extractValue(receivedData, "hum");
+        String pm25 = extractValue(receivedData, "pm25");
+        String pm10 = extractValue(receivedData, "pm10");
+        String aqi = extractValue(receivedData, "aqi");
+        String pollutant = extractValue(receivedData, "pollutant");
+        String counter = extractValue(receivedData, "count");
+
+        // Print parsed values for Node 1 and Node 2
+        Serial.println("Parsed Data from " + nodeId + ":");
+        Serial.println("  Node ID: " + nodeId);
+        Serial.println("  Timestamp: " + timestamp);
+        Serial.println("  Temperature: " + temperature + " °C");
+        Serial.println("  Humidity: " + humidity + " %");
+        Serial.println("  PM2.5: " + pm25 + " µg/m³");
+        Serial.println("  PM10: " + pm10 + " µg/m³");
+        Serial.println("  AQI: " + aqi);
+        Serial.println("  Pollutant: " + pollutant);
+        Serial.println("  Counter: " + counter);
+      } else if (nodeId == "teleNode 1" || nodeId == "teleNode 2") {
+        String loadCurrent = extractValue(receivedData, "load_current_mA");
+        String batteryVoltage = extractValue(receivedData, "battery_voltage_V");
+        String powerConsumption = extractValue(receivedData, "power_consumption_mW");
+
+        // Print parsed values for Node 1 Telemetry and Node 2 Telemetry
+        Serial.println("Parsed Data from " + nodeId + ":");
+        Serial.println("  Node ID: " + nodeId);
+        Serial.println("  Load Current: " + loadCurrent + " mA");
+        Serial.println("  Battery Voltage: " + batteryVoltage + " V");
+        Serial.println("  Power Consumption: " + powerConsumption + " mW");
+      } else {
+        Serial.println("Unknown node ID.");
+      }
     } else {
       Serial.println("Invalid data format.");
     }

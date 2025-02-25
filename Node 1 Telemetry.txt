@@ -1,0 +1,42 @@
+#include <Wire.h>
+
+// Define the analog input pin connected to the MAX44284 output
+#define CURRENT_SENSE_PIN A1
+
+// Define the shunt resistor value (in ohms)
+#define SHUNT_RESISTOR 0.1 // Example value, replace with your actual shunt resistor value
+
+void setup() {
+  // Initialize serial communication for debugging
+  Serial.begin(9600);
+  while (!Serial);
+
+  // Initialize I2C
+  Wire.begin();
+
+  // Your existing setup code
+}
+
+void loop() {
+  // Read the output voltage from the MAX44284
+  int sensorValue = analogRead(CURRENT_SENSE_PIN);
+  float outputVoltage = sensorValue * (3.3 / 1023.0); // Convert the analog reading to voltage (assuming 3.3V reference)
+
+  // Calculate the current using the output voltage and shunt resistor value
+  float current = outputVoltage / SHUNT_RESISTOR;
+
+  // Print the current for debugging
+  Serial.print("Current: ");
+  Serial.print(current);
+  Serial.println(" A");
+
+  // Your existing loop code
+
+  // Increment the counter
+  counter++;
+
+  // Apply a delay of 32 seconds if the counter is greater than 1
+  if (counter > 1) {
+    delay(32000); // 32 seconds delay
+  }
+}
