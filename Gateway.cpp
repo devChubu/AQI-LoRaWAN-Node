@@ -21,7 +21,8 @@
 
 void setup() {
   Serial.begin(9600); //  Start Serial Monitor for debugging
-  while (!Serial);
+  delay (2000); // Small delay to ensure serial port is initialized
+  //while (!Serial);
 
   Serial.println("LoRa Gateway");
 
