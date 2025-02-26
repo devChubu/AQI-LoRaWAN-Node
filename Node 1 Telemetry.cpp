@@ -1,19 +1,3 @@
-/*
- * File: Node 1 Telemetry.cpp
- * 
- * Project Description: GTC 2025 MAX16163 WSN Demo
- * Author: devChubu
- * Date: 2025-02-18
- * Version: 1.0
- * Dependencies: 
- *   - Wire.h
- *   - SPI.h
- *   - LoRa.h
- * Usage: 
- *   - This code is used for the power telemetry of the MAX16163 Wireless Sensor Network Demo. 
- *     It uses MAX44284 for current sensing and MKRWAN1310's ADC for battery voltage measurement.
- */
-
 #include <Wire.h> // For GPIO Comms
 #include <SPI.h> // Serial Peripheral Interface
 #include <LoRa.h> // LoRa Library
@@ -32,8 +16,8 @@ int counter = 0;
 
 void setup() {
   // Initialize serial communication for debugging
-  Serial.begin(9600);
-  while (!Serial);
+  //Serial.begin(9600);
+  //while (!Serial);
 
   // Initialize I2C
   Wire.begin();
@@ -53,6 +37,11 @@ void loop() {
   // Read the output voltage from the MAX44284
   int outADC = analogRead(CURRENT_SENSE_PIN);
   float outV = outADC * (3.3 / 1023.0); // Convert the analog reading to voltage (assuming 3.3V reference)
+
+  // Conditional calibration check for outV
+  if (outV < 0.02) {
+    outV /= 7.425523183;
+  }
 
   // Calculate the current using the output voltage and shunt resistor value
   float loadI = outV / (senseR * gainV);
@@ -76,6 +65,7 @@ void loop() {
   // Create JSON data packet
   String dataPacket = "{";
   dataPacket += "\"node\":\"" + String(NODE_ID) + "\",";
+  dataPacket += "\"out_voltage_V\":" + String(outV, 5) + ",";
   dataPacket += "\"load_current_mA\":" + String(loadI_mA, 5) + ",";
   dataPacket += "\"battery_voltage_V\":" + String(battV, 5) + ",";
   dataPacket += "\"power_consumption_mW\":" + String(loadP_mW, 5);

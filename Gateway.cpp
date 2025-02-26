@@ -9,9 +9,6 @@
  *   - SPI.h
  *   - LoRa.h
  *   - Wire.h
- *   - SparkFun_RV8803.h
- *   - Adafruit_SHT4x.h
- *   - Adafruit_PM25AQI.h
  * Usage: 
  *   - This code initializes various LoRaWAN , to recieve data from the nodes, 
  *     parse data, and save data locally to a PC.
@@ -85,6 +82,9 @@ void loop() {
         Serial.println("  Load Current: " + loadCurrent + " mA");
         Serial.println("  Battery Voltage: " + batteryVoltage + " V");
         Serial.println("  Power Consumption: " + powerConsumption + " mW");
+
+        // Send data over Serial
+        Serial.println(received data);
       } else {
         Serial.println("Unknown node ID.");
       }
